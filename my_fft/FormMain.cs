@@ -88,7 +88,7 @@ namespace my_fft
             // generate signal 
             // sample rate 1k Hz
             // frequency can be chose by radio button (5, 10, 15 hz)
-            // The signal length will increase up to 30s
+            // The signal length will increase up to 10s
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();
             long last_time_gen_fake_data = watch.ElapsedMilliseconds;
@@ -123,7 +123,7 @@ namespace my_fft
                 lock (this.src_wave)
                 {
                     this.src_wave.AddRange(add_data);
-                    while(this.src_wave.Last().time - this.src_wave.First().time > 5.0) //
+                    while(this.src_wave.Last().time - this.src_wave.First().time > 10.0) // 10s
                     {
                         this.src_wave.RemoveAt(0);
                     }
@@ -150,6 +150,7 @@ namespace my_fft
 
             if (src_signal.Length > 1)
             {
+                // ------------------------------------
                 double[] src_signal_y = new double[src_signal.Length];
                 for (int i = 0; i < src_signal.Length; i++)
                 {
@@ -161,12 +162,32 @@ namespace my_fft
                 this.plt_signal.maxRenderIndex = src_signal_y.Length - 1;
 
                 if( this.clock_s() - this.last_time_mouse_on_chart_signal_s > 5.0)
-                    this.chart_signal.plt.AxisAuto(horizontalMargin: 0, verticalMargin: 0.5);
-                //this.chart_signal.plt.
-
+                    this.chart_signal.plt.AxisAuto();
                 this.chart_signal.Render();
+
+                // ------------------------------------
+                // FFT
+                model.FourierTool f_tool = new model.FourierTool();
+                model.FourierTool.Result fft_result = f_tool.FFT(src_signal_y, 1000);
+                // ------------------------------------
+                if (fft_result.y_magnitude.Length > 0)
+                {
+                    this.plt_fft.ys = fft_result.y_magnitude;
+                    this.plt_fft.maxRenderIndex = fft_result.y_magnitude.Length - 1;
+                    this.plt_fft.samplePeriod = fft_result.hz_per_sample;
+                    this.chart_fft.plt.Axis(x1: 0, x2: 30);
+                    this.chart_fft.plt.AxisAutoY();
+
+                }
+                else
+                {
+                    this.plt_fft.maxRenderIndex = 1;
+                }
+                this.chart_fft.Render();
+
+                // ------------------------------------
             }
-            
+
 
         }
 
